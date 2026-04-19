@@ -1,0 +1,36 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Buildozer and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip build-essential git python3-dev ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good libsqlite3-dev sqlite3 bzip2 libbz2-dev libssl-dev openssl libgdbm-dev libgdbm-compat-dev liblzma-dev libreadline-dev libncursesw5-dev libffi-dev uuid-dev libdb5.3-dev
+        pip3 install --user --upgrade buildozer cython virtualenv
+
+    - name: Build APK with Buildozer
+      run: |
+        yes | buildozer init
+        sed -i 's/source.include_exts = py,png,jpg,kv,atlas/source.include_exts = html,css,js,png,jpg/' buildozer.spec
+        buildozer android debug
+      
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: MyWebApp-Debug
+        path: bin/*.apk
