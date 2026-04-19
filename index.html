@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科学计算器</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 数学公式渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a56db',
+                        secondary: '#e2e8f0',
+                        accent: '#3b82f6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        dark: '#1e293b',
+                        light: '#f8fafc'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'inner-lg': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .btn {
+                @apply flex items-center justify-center rounded-lg font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95;
+            }
+            
+            .btn-primary {
+                @apply bg-primary text-white hover:bg-primary/90 focus:ring-primary/50;
+            }
+            
+            .btn-secondary {
+                @apply bg-secondary text-dark hover:bg-secondary/90 focus:ring-secondary/50;
+            }
+            
+            .btn-accent {
+                @apply bg-accent text-white hover:bg-accent/90 focus:ring-accent/50;
+            }
+            
+            .btn-success {
+                @apply bg-success text-white hover:bg-success/90 focus:ring-success/50;
+            }
+            
+            .btn-warning {
+                @apply bg-warning text-white hover:bg-warning/90 focus:ring-warning/50;
+            }
+            
+            .btn-danger {
+                @apply bg-danger text-white hover:bg-danger/90 focus:ring-danger/50;
+            }
+            
+            .btn-info {
+                @apply bg-info text-white hover:bg-info/90 focus:ring-info/50;
+            }
+            
+            .display {
+                @apply w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-right text-xl font-mono focus:outline-none focus:ring-2 focus:ring-primary/50;
+            }
+            
+            .history-item {
+                @apply p-2 border-b border-gray-200 hover:bg-gray-50 cursor-pointer;
+            }
+            
+            .converter-input {
+                @apply w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50;
+            }
+            
+            .tab-active {
+                @apply border-b-2 border-primary text-primary;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- 标题 -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-800">科学计算器</h1>
+                <p class="text-gray-600 mt-2">高精度、多功能的科学计算工具</p>
+            </div>
+            
+            <!-- 计算器主体 -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <!-- 模式切换标签 -->
+                <div class="flex border-b">
+                    <button id="calculator-tab" class="flex-1 py-4 text-center font-medium tab-active">计算器</button>
+                    <button id="converter-tab" class="flex-1 py-4 text-center font-medium text-gray-600">单位换算</button>
+                </div>
+                
+                <!-- 计算器面板 -->
+                <div id="calculator-panel" class="p-6">
+                    <!-- 显示屏 -->
+                    <div class="mb-6">
+                        <div id="formula-display" class="h-12 mb-2 text-right text-gray-600 overflow-hidden"></div>
+                        <input type="text" id="display" class="display h-16 text-2xl" value="0" readonly>
+                    </div>
+                    
+                    <!-- 按钮网格 -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <!-- 左侧：基本运算 -->
+                        <div class="grid grid-cols-4 gap-3">
+                            <!-- 第一行 -->
+                            <button class="btn btn-danger" onclick="clearAll()">C</button>
+                            <button class="btn btn-danger" onclick="clearEntry()">CE</button>
+                            <button class="btn btn-secondary" onclick="backspace()">⌫</button>
+                            <button class="btn btn-accent" onclick="appendToDisplay('/')">/</button>
+                            
+                            <!-- 第二行 -->
+                            <button class="btn btn-secondary" onclick="appendToDisplay('7')">7</button>
+                            <button class="btn btn-secondary" onclick="appendToDisplay('8')">8</button>
+                            <button class="btn btn-secondary" onclick="appendToDisplay('9')">9</button>
+                            <button class="btn btn-accent" onclick="appendToDisplay('*')">×</button>
+                            
+                            <!-- 第三行 -->
+                            <button class="btn btn-secondary" onclick="appendToDisplay('4')">4</button>
+                            <button class="btn btn-secondary" onclick="appendToDisplay('5')">5</button>
+                            <button class="btn btn-secondary" onclick="appendToDisplay('6')">6</button>
+                            <button class="btn btn-accent" onclick="appendToDisplay('-')">-</button>
+                            
+                            <!-- 第四行 -->
+                            <button class="btn btn-secondary" onclick="appendToDisplay('1')">1</button>
+                            <button class="btn btn-secondary" onclick="appendToDisplay('2')">2</button>
+                            <button class="btn btn-secondary" onclick="appendToDisplay('3')">3</button>
+                            <button class="btn btn-accent" onclick="appendToDisplay('+')">+</button>
+                            
+                            <!-- 第五行 -->
+                            <button class="btn btn-secondary" onclick="appendToDisplay('0')">0</button>
+                            <button class="btn btn-secondary" onclick="appendToDisplay('.')">.</button>
+                            <button class="btn btn-info" onclick="appendToDisplay('(')">（</button>
+                            <button class="btn btn-info" onclick="appendToDisplay(')')">）</button>
+                            
+                            <!-- 第六行 -->
+                            <button class="btn btn-success col-span-4" onclick="calculate()">=</button>
+                        </div>
+                        
+                        <!-- 右侧：科学函数 -->
+                        <div class="grid grid-cols-4 gap-3">
+                            <!-- 第一行 -->
+                            <button class="btn btn-warning" onclick="appendFunction('sin(')">sin</button>
+                            <button class="btn btn-warning" onclick="appendFunction('cos(')">cos</button>
+                            <button class="btn btn-warning" onclick="appendFunction('tan(')">tan</button>
+                            <button class="btn btn-warning" onclick="appendFunction('log(')">log</button>
+                            
+                            <!-- 第二行 -->
+                            <button class="btn btn-warning" onclick="appendFunction('asin(')">asin</button>
+                            <button class="btn btn-warning" onclick="appendFunction('acos(')">acos</button>
+                            <button class="btn btn-warning" onclick="appendFunction('atan(')">atan</button>
+                            <button class="btn btn-warning" onclick="appendFunction('ln(')">ln</button>
+                            
+                            <!-- 第三行 -->
+                            <button class="btn btn-warning" onclick="appendFunction('sqrt(')">√</button>
+                            <button class="btn btn-warning" onclick="appendFunction('cbrt(')">∛</button>
+                            <button class="btn btn-warning" onclick="appendToDisplay('^')">x^y</button>
+                            <button class="btn btn-warning" onclick="appendToDisplay('^2')">x²</button>
+                            
+                            <!-- 第四行 -->
+                            <button class="btn btn-info" onclick="appendToDisplay('pi')">π</button>
+                            <button class="btn btn-info" onclick="appendToDisplay('e')">e</button>
+                            <button class="btn btn-info" onclick="appendToDisplay('!')">x!</button>
+                            <button class="btn btn-info" onclick="appendToDisplay('%')">%</button>
+                            
+                            <!-- 第五行 -->
+                            <button class="btn btn-accent" onclick="toggleSign()">±</button>
+                            <button class="btn btn-accent" onclick="appendToDisplay('1/x')">1/x</button>
+                            <button class="btn btn-accent" onclick="appendToDisplay('|x|')">|x|</button>
+                            <button class="btn btn-accent" onclick="appendToDisplay('mod')">mod</button>
+                            
+                            <!-- 进制转换 -->
+                            <div class="col-span-4 grid grid-cols-4 gap-2 mt-2">
+                                <button class="btn btn-secondary text-sm" onclick="convertBase(2)">BIN</button>
+                                <button class="btn btn-secondary text-sm" onclick="convertBase(8)">OCT</button>
+                                <button class="btn btn-secondary text-sm" onclick="convertBase(10)">DEC</button>
+                                <button class="btn btn-secondary text-sm" onclick="convertBase(16)">HEX</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 历史记录 -->
+                    <div class="mt-8">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-lg font-medium">历史记录</h3>
+                            <button class="text-sm text-gray-500 hover:text-gray-700" onclick="clearHistory()">清除</button>
+                        </div>
+                        <div id="history" class="max-h-40 overflow-y-auto border rounded-lg">
+                            <!-- 历史记录将在这里动态添加 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 单位换算面板 -->
+                <div id="converter-panel" class="p-6 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- 长度换算 -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="text-lg font-medium mb-4">长度换算</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">从</label>
+                                    <input type="number" id="length-from" class="converter-input" placeholder="输入数值">
+                                    <select id="length-from-unit" class="w-full mt-2 border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="m">米 (m)</option>
+                                        <option value="km">千米 (km)</option>
+                                        <option value="cm">厘米 (cm)</option>
+                                        <option value="mm">毫米 (mm)</option>
+                                        <option value="in">英寸 (in)</option>
+                                        <option value="ft">英尺 (ft)</option>
+                                        <option value="yd">码 (yd)</option>
+                                        <option value="mi">英里 (mi)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">到</label>
+                                    <input type="number" id="length-to" class="converter-input" readonly>
+                                    <select id="length-to-unit" class="w-full mt-2 border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="m">米 (m)</option>
+                                        <option value="km">千米 (km)</option>
+                                        <option value="cm">厘米 (cm)</option>
+                                        <option value="mm">毫米 (mm)</option>
+                                        <option value="in">英寸 (in)</option>
+                                        <option value="ft">英尺 (ft)</option>
+                                        <option value="yd">码 (yd)</option>
+                                        <option value="mi">英里 (mi)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="mt-4 btn btn-primary w-full" onclick="convertLength()">转换</button>
+                        </div>
+                        
+                        <!-- 重量换算 -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="text-lg font-medium mb-4">重量换算</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">从</label>
+                                    <input type="number" id="weight-from" class="converter-input" placeholder="输入数值">
+                                    <select id="weight-from-unit" class="w-full mt-2 border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="kg">千克 (kg)</option>
+                                        <option value="g">克 (g)</option>
+                                        <option value="mg">毫克 (mg)</option>
+                                        <option value="lb">磅 (lb)</option>
+                                        <option value="oz">盎司 (oz)</option>
+                                        <option value="t">吨 (t)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">到</label>
+                                    <input type="number" id="weight-to" class="converter-input" readonly>
+                                    <select id="weight-to-unit" class="w-full mt-2 border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="kg">千克 (kg)</option>
+                                        <option value="g">克 (g)</option>
+                                        <option value="mg">毫克 (mg)</option>
+                                        <option value="lb">磅 (lb)</option>
+                                        <option value="oz">盎司 (oz)</option>
+                                        <option value="t">吨 (t)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="mt-4 btn btn-primary w-full" onclick="convertWeight()">转换</button>
+                        </div>
+                        
+                        <!-- 温度换算 -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="text-lg font-medium mb-4">温度换算</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">从</label>
+                                    <input type="number" id="temp-from" class="converter-input" placeholder="输入数值">
+                                    <select id="temp-from-unit" class="w-full mt-2 border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="c">摄氏度 (°C)</option>
+                                        <option value="f">华氏度 (°F)</option>
+                                        <option value="k">开尔文 (K)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">到</label>
+                                    <input type="number" id="temp-to" class="converter-input" readonly>
+                                    <select id="temp-to-unit" class="w-full mt-2 border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="c">摄氏度 (°C)</option>
+                                        <option value="f">华氏度 (°F)</option>
+                                        <option value="k">开尔文 (K)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="mt-4 btn btn-primary w-full" onclick="convertTemperature()">转换</button>
+                        </div>
+                        
+                        <!-- 面积换算 -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="text-lg font-medium mb-4">面积换算</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">从</label>
+                                    <input type="number" id="area-from" class="converter-input" placeholder="输入数值">
+                                    <select id="area-from-unit" class="w-full mt-2 border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="m2">平方米 (m²)</option>
+                                        <option value="km2">平方千米 (km²)</option>
+                                        <option value="cm2">平方厘米 (cm²)</option>
+                                        <option value="mm2">平方毫米 (mm²)</option>
+                                        <option value="in2">平方英寸 (in²)</option>
+                                        <option value="ft2">平方英尺 (ft²)</option>
+                                        <option value="acre">英亩 (acre)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">到</label>
+                                    <input type="number" id="area-to" class="converter-input" readonly>
+                                    <select id="area-to-unit" class="w-full mt-2 border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="m2">平方米 (m²)</option>
+                                        <option value="km2">平方千米 (km²)</option>
+                                        <option value="cm2">平方厘米 (cm²)</option>
+                                        <option value="mm2">平方毫米 (mm²)</option>
+                                        <option value="in2">平方英寸 (in²)</option>
+                                        <option value="ft2">平方英尺 (ft²)</option>
+                                        <option value="acre">英亩 (acre)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="mt-4 btn btn-primary w-full" onclick="convertArea()">转换</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 页脚 -->
+            <div class="mt-8 text-center text-gray-600 text-sm">
+                <p>© 2025 科学计算器 | 支持键盘输入</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentInput = '0';
+        let previousInput = '';
+        let operator = '';
+        let shouldResetDisplay = false;
+        let memory = 0;
+        let angleMode = 'deg'; // 'deg' 或 'rad'
+        
+        // DOM 元素
+        const display = document.getElementById('display');
+        const formulaDisplay = document.getElementById('formula-display');
+        const history = document.getElementById('history');
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHistory();
+            updateDisplay();
+            
+            // 标签切换
+            document.getElementById('calculator-tab').addEventListener('click', function() {
+                showCalculatorPanel();
+            });
+            
+            document.getElementById('converter-tab').addEventListener('click', function() {
+                showConverterPanel();
+            });
+            
+            // 键盘支持
+            document.addEventListener('keydown', handleKeyPress);
+            
+            // 单位换算输入监听
+            document.getElementById('length-from').addEventListener('input', convertLength);
+            document.getElementById('weight-from').addEventListener('input', convertWeight);
+            document.getElementById('temp-from').addEventListener('input', convertTemperature);
+            document.getElementById('area-from').addEventListener('input', convertArea);
+            
+            document.getElementById('length-from-unit').addEventListener('change', convertLength);
+            document.getElementById('length-to-unit').addEventListener('change', convertLength);
+            document.getElementById('weight-from-unit').addEventListener('change', convertWeight);
+            document.getElementById('weight-to-unit').addEventListener('change', convertWeight);
+            document.getElementById('temp-from-unit').addEventListener('change', convertTemperature);
+            document.getElementById('temp-to-unit').addEventListener('change', convertTemperature);
+            document.getElementById('area-from-unit').addEventListener('change', convertArea);
+            document.getElementById('area-to-unit').addEventListener('change', convertArea);
+        });
+        
+        // 显示计算器面板
+        function showCalculatorPanel() {
+            document.getElementById('calculator-tab').classList.add('tab-active');
+            document.getElementById('calculator-tab').classList.remove('text-gray-600');
+            document.getElementById('converter-tab').classList.remove('tab-active');
+            document.getElementById('converter-tab').classList.add('text-gray-600');
+            
+            document.getElementById('calculator-panel').classList.remove('hidden');
+            document.getElementById('converter-panel').classList.add('hidden');
+        }
+        
+        // 显示单位换算面板
+        function showConverterPanel() {
+            document.getElementById('converter-tab').classList.add('tab-active');
+            document.getElementById('converter-tab').classList.remove('text-gray-600');
+            document.getElementById('calculator-tab').classList.remove('tab-active');
+            document.getElementById('calculator-tab').classList.add('text-gray-600');
+            
+            document.getElementById('converter-panel').classList.remove('hidden');
+            document.getElementById('calculator-panel').classList.add('hidden');
+        }
+        
+        // 更新显示屏
+        function updateDisplay() {
+            display.value = currentInput;
+            updateFormulaDisplay();
+        }
+        
+        // 更新公式显示
+        function updateFormulaDisplay() {
+            if (previousInput && operator) {
+                formulaDisplay.innerHTML = `${previousInput} ${getOperatorSymbol(operator)} ${currentInput}`;
+            } else {
+                formulaDisplay.innerHTML = '';
+            }
+        }
+        
+        // 获取运算符符号
+        function getOperatorSymbol(op) {
+            const symbols = {
+                '+': '+',
+                '-': '-',
+                '*': '×',
+                '/': '÷',
+                '^': '^',
+                'mod': 'mod',
+                '%': '%'
+            };
+            return symbols[op] || op;
+        }
+        
+        // 添加内容到显示屏
+        function appendToDisplay(value) {
+            if (shouldResetDisplay) {
+                currentInput = '0';
+                shouldResetDisplay = false;
+            }
+            
+            if (currentInput === '0' && value !== '.') {
+                currentInput = value;
+            } else {
+                currentInput += value;
+            }
+            
+            updateDisplay();
+        }
+        
+        // 添加函数到显示屏
+        function appendFunction(func) {
+            if (shouldResetDisplay) {
+                currentInput = '0';
+                shouldResetDisplay = false;
+            }
+            
+            if (currentInput === '0') {
+                currentInput = func;
+            } else {
+                currentInput += func;
+            }
+            
+            updateDisplay();
+        }
+        
+        // 清除所有
+        function clearAll() {
+            currentInput = '0';
+            previousInput = '';
+            operator = '';
+            updateDisplay();
+        }
+        
+        // 清除当前输入
+        function clearEntry() {
+            currentInput = '0';
+            updateDisplay();
+        }
+        
+        // 退格
+        function backspace() {
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+        
+        // 切换正负号
+        function toggleSign() {
+            if (currentInput !== '0' && currentInput.charAt(0) !== '-') {
+                currentInput = '-' + currentInput;
+            } else if (currentInput.charAt(0) === '-') {
+                currentInput = currentInput.slice(1);
+            }
+            updateDisplay();
+        }
+        
+        // 计算结果
+        function calculate() {
+            try {
+                // 保存当前表达式用于历史记录
+                const expression = currentInput;
+                
+                // 替换数学常数和函数
+                let processedInput = currentInput
+                    .replace(/pi/g, Math.PI)
+                    .replace(/e/g, Math.E)
+                    .replace(/sin\(/g, 'Math.sin(')
+                    .replace(/cos\(/g, 'Math.cos(')
+                    .replace(/tan\(/g, 'Math.tan(')
+                    .replace(/asin\(/g, 'Math.asin(')
+                    .replace(/acos\(/g, 'Math.acos(')
+                    .replace(/atan\(/g, 'Math.atan(')
+                    .replace(/log\(/g, 'Math.log10(')
+                    .replace(/ln\(/g, 'Math.log(')
+                    .replace(/sqrt\(/g, 'Math.sqrt(')
+                    .replace(/cbrt\(/g, 'Math.cbrt(')
+                    .replace(/\^2/g, '**2')
+                    .replace(/\^/g, '**')
+                    .replace(/\|x\|/g, 'Math.abs(')
+                    .replace(/1\/x/g, '1/')
+                    .replace(/mod/g, '%');
+                
+                // 处理阶乘
+                processedInput = processedInput.replace(/(\d+)!/g, function(match, num) {
+                    return factorial(parseInt(num));
+                });
+                
+                // 如果是角度模式，将三角函数的参数转换为弧度
+                if (angleMode === 'deg') {
+                    processedInput = processedInput.replace(/Math\.(sin|cos|tan)\(([^)]+)\)/g, function(match, func, arg) {
+                        return `Math.${func}((${arg}) * Math.PI / 180)`;
+                    });
+                }
+                
+                // 计算结果
+                let result = eval(processedInput);
+                
+                // 检查结果是否有效
+                if (isNaN(result) || !isFinite(result)) {
+                    throw new Error('无效计算');
+                }
+                
+                // 格式化结果
+                if (Number.isInteger(result)) {
+                    result = result.toString();
+                } else {
+                    // 限制小数位数
+                    result = parseFloat(result.toFixed(10)).toString();
+                }
+                
+                // 添加到历史记录
+                addToHistory(expression, result);
+                
+                // 更新显示
+                currentInput = result;
+                previousInput = '';
+                operator = '';
+                shouldResetDisplay = true;
+                updateDisplay();
+                
+            } catch (error) {
+                currentInput = '错误';
+                updateDisplay();
+                setTimeout(() => {
+                    if (currentInput === '错误') {
+                        clearAll();
+                    }
+                }, 2000);
+            }
+        }
+        
+        // 阶乘函数
+        function factorial(n) {
+            if (n < 0) return NaN;
+            if (n === 0 || n === 1) return 1;
+            let result = 1;
+            for (let i = 2; i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        }
+        
+        // 进制转换
+        function convertBase(base) {
+            try {
+                const num = parseFloat(currentInput);
+                if (isNaN(num) || !Number.isInteger(num) || num < 0) {
+                    throw new Error('无效输入');
+                }
+                
+                let result;
+                switch (base) {
+                    case 2:
+                        result = num.toString(2);
+                        break;
+                    case 8:
+                        result = num.toString(8);
+                        break;
+                    case 10:
+                        result = num.toString(10);
+                        break;
+                    case 16:
+                        result = num.toString(16).toUpperCase();
+                        break;
+                    default:
+                        return;
+                }
+                
+                // 添加到历史记录
+                addToHistory(`${num} (DEC) to ${base === 2 ? 'BIN' : base === 8 ? 'OCT' : base === 10 ? 'DEC' : 'HEX'}`, result);
+                
+                currentInput = result;
+                updateDisplay();
+            } catch (error) {
+                currentInput = '错误';
+                updateDisplay();
+                setTimeout(() => {
+                    if (currentInput === '错误') {
+                        clearAll();
+                    }
+                }, 2000);
+            }
+        }
+        
+        // 添加到历史记录
+        function addToHistory(expression, result) {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `<div class="text-sm text-gray-600">${expression}</div><div class="text-sm font-medium">= ${result}</div>`;
+            historyItem.addEventListener('click', function() {
+                currentInput = result;
+                updateDisplay();
+            });
+            
+            history.prepend(historyItem);
+            
+            // 保存到本地存储
+            const historyData = JSON.parse(localStorage.getItem('calculatorHistory') || '[]');
+            historyData.unshift({ expression, result, timestamp: new Date().toISOString() });
+            
+            // 限制历史记录数量
+            if (historyData.length > 50) {
+                historyData.pop();
+            }
+            
+            localStorage.setItem('calculatorHistory', JSON.stringify(historyData));
+        }
+        
+        // 加载历史记录
+        function loadHistory() {
+            const historyData = JSON.parse(localStorage.getItem('calculatorHistory') || '[]');
+            
+            historyData.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `<div class="text-sm text-gray-600">${item.expression}</div><div class="text-sm font-medium">= ${item.result}</div>`;
+                historyItem.addEventListener('click', function() {
+                    currentInput = item.result;
+                    updateDisplay();
+                });
+                
+                history.appendChild(historyItem);
+            });
+        }
+        
+        // 清除历史记录
+        function clearHistory() {
+            history.innerHTML = '';
+            localStorage.removeItem('calculatorHistory');
+        }
+        
+        // 键盘支持
+        function handleKeyPress(event) {
+            const key = event.key;
+            
+            // 防止默认行为
+            if ('0123456789+-*/.=()'.includes(key) || key === 'Enter' || key === 'Backspace' || key === 'Escape') {
+                event.preventDefault();
+            }
+            
+            // 数字和基本运算符
+            if ('0123456789.'.includes(key)) {
+                appendToDisplay(key);
+            } else if (key === '+') {
+                appendToDisplay('+');
+            } else if (key === '-') {
+                appendToDisplay('-');
+            } else if (key === '*') {
+                appendToDisplay('*');
+            } else if (key === '/') {
+                appendToDisplay('/');
+            } else if (key === '(' || key === ')') {
+                appendToDisplay(key);
+            } else if (key === 'Enter' || key === '=') {
+                calculate();
+            } else if (key === 'Backspace') {
+                backspace();
+            } else if (key === 'Escape') {
+                clearAll();
+            }
+        }
+        
+        // 长度换算
+        function convertLength() {
+            const fromValue = parseFloat(document.getElementById('length-from').value);
+            const fromUnit = document.getElementById('length-from-unit').value;
+            const toUnit = document.getElementById('length-to-unit').value;
+            const toInput = document.getElementById('length-to');
+            
+            if (isNaN(fromValue)) {
+                toInput.value = '';
+                return;
+            }
+            
+            // 转换为米
+            let valueInMeters;
+            switch (fromUnit) {
+                case 'm': valueInMeters = fromValue; break;
+                case 'km': valueInMeters = fromValue * 1000; break;
+                case 'cm': valueInMeters = fromValue / 100; break;
+                case 'mm': valueInMeters = fromValue / 1000; break;
+                case 'in': valueInMeters = fromValue * 0.0254; break;
+                case 'ft': valueInMeters = fromValue * 0.3048; break;
+                case 'yd': valueInMeters = fromValue * 0.9144; break;
+                case 'mi': valueInMeters = fromValue * 1609.344; break;
+                default: valueInMeters = fromValue;
+            }
+            
+            // 从米转换为目标单位
+            let result;
+            switch (toUnit) {
+                case 'm': result = valueInMeters; break;
+                case 'km': result = valueInMeters / 1000; break;
+                case 'cm': result = valueInMeters * 100; break;
+                case 'mm': result = valueInMeters * 1000; break;
+                case 'in': result = valueInMeters / 0.0254; break;
+                case 'ft': result = valueInMeters / 0.3048; break;
+                case 'yd': result = valueInMeters / 0.9144; break;
+                case 'mi': result = valueInMeters / 1609.344; break;
+                default: result = valueInMeters;
+            }
+            
+            toInput.value = Number.isInteger(result) ? result : parseFloat(result.toFixed(6));
+        }
+        
+        // 重量换算
+        function convertWeight() {
+            const fromValue = parseFloat(document.getElementById('weight-from').value);
+            const fromUnit = document.getElementById('weight-from-unit').value;
+            const toUnit = document.getElementById('weight-to-unit').value;
+            const toInput = document.getElementById('weight-to');
+            
+            if (isNaN(fromValue)) {
+                toInput.value = '';
+                return;
+            }
+            
+            // 转换为克
+            let valueInGrams;
+            switch (fromUnit) {
+                case 'kg': valueInGrams = fromValue * 1000; break;
+                case 'g': valueInGrams = fromValue; break;
+                case 'mg': valueInGrams = fromValue / 1000; break;
+                case 'lb': valueInGrams = fromValue * 453.59237; break;
+                case 'oz': valueInGrams = fromValue * 28.349523125; break;
+                case 't': valueInGrams = fromValue * 1000000; break;
+                default: valueInGrams = fromValue;
+            }
+            
+            // 从克转换为目标单位
+            let result;
+            switch (toUnit) {
+                case 'kg': result = valueInGrams / 1000; break;
+                case 'g': result = valueInGrams; break;
+                case 'mg': result = valueInGrams * 1000; break;
+                case 'lb': result = valueInGrams / 453.59237; break;
+                case 'oz': result = valueInGrams / 28.349523125; break;
+                case 't': result = valueInGrams / 1000000; break;
+                default: result = valueInGrams;
+            }
+            
+            toInput.value = Number.isInteger(result) ? result : parseFloat(result.toFixed(6));
+        }
+        
+        // 温度换算
+        function convertTemperature() {
+            const fromValue = parseFloat(document.getElementById('temp-from').value);
+            const fromUnit = document.getElementById('temp-from-unit').value;
+            const toUnit = document.getElementById('temp-to-unit').value;
+            const toInput = document.getElementById('temp-to');
+            
+            if (isNaN(fromValue)) {
+                toInput.value = '';
+                return;
+            }
+            
+            // 转换为摄氏度
+            let valueInCelsius;
+            switch (fromUnit) {
+                case 'c': valueInCelsius = fromValue; break;
+                case 'f': valueInCelsius = (fromValue - 32) * 5/9; break;
+                case 'k': valueInCelsius = fromValue - 273.15; break;
+                default: valueInCelsius = fromValue;
+            }
+            
+            // 从摄氏度转换为目标单位
+            let result;
+            switch (toUnit) {
+                case 'c': result = valueInCelsius; break;
+                case 'f': result = valueInCelsius * 9/5 + 32; break;
+                case 'k': result = valueInCelsius + 273.15; break;
+                default: result = valueInCelsius;
+            }
+            
+            toInput.value = Number.isInteger(result) ? result : parseFloat(result.toFixed(2));
+        }
+        
+        // 面积换算
+        function convertArea() {
+            const fromValue = parseFloat(document.getElementById('area-from').value);
+            const fromUnit = document.getElementById('area-from-unit').value;
+            const toUnit = document.getElementById('area-to-unit').value;
+            const toInput = document.getElementById('area-to');
+            
+            if (isNaN(fromValue)) {
+                toInput.value = '';
+                return;
+            }
+            
+            // 转换为平方米
+            let valueInSquareMeters;
+            switch (fromUnit) {
+                case 'm2': valueInSquareMeters = fromValue; break;
+                case 'km2': valueInSquareMeters = fromValue * 1000000; break;
+                case 'cm2': valueInSquareMeters = fromValue / 10000; break;
+                case 'mm2': valueInSquareMeters = fromValue / 1000000; break;
+                case 'in2': valueInSquareMeters = fromValue * 0.00064516; break;
+                case 'ft2': valueInSquareMeters = fromValue * 0.092903; break;
+                case 'acre': valueInSquareMeters = fromValue * 4046.86; break;
+                default: valueInSquareMeters = fromValue;
+            }
+            
+            // 从平方米转换为目标单位
+            let result;
+            switch (toUnit) {
+                case 'm2': result = valueInSquareMeters; break;
+                case 'km2': result = valueInSquareMeters / 1000000; break;
+                case 'cm2': result = valueInSquareMeters * 10000; break;
+                case 'mm2': result = valueInSquareMeters * 1000000; break;
+                case 'in2': result = valueInSquareMeters / 0.00064516; break;
+                case 'ft2': result = valueInSquareMeters / 0.092903; break;
+                case 'acre': result = valueInSquareMeters / 4046.86; break;
+                default: result = valueInSquareMeters;
+            }
+            
+            toInput.value = Number.isInteger(result) ? result : parseFloat(result.toFixed(6));
+        }
+    </script>
+</body>
+</html>
