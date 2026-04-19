@@ -1,0 +1,20 @@
+[app]
+title = My Web App
+package.name = mywebapp
+package.domain = org.test
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas,html,css,js
+version = 0.1
+requirements = python3,kivy,pyjnius
+orientation = portrait
+osx.python_version = 3
+osx.kivy_version = 1.9.1
+fullscreen = 0
+android.archs = arm64-v8a
+android.allow_backup = True
+android.accept_sdk_license = True
+android.api = 33
+android.minapi = 21
+android.ndk = 25b
+android.skip_update = False
+android.permissions = INTERNET
